@@ -1,0 +1,12 @@
+language: go
+
+go_import_path: 4d63.com/collapsewhitespace
+
+os:
+  - linux
+
+install:
+  - make setup
+
+script:
+  - make test
