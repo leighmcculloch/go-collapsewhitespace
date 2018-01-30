@@ -14,24 +14,40 @@ import (
 //
 //   '\t', '\n', '\v', '\f', '\r', ' ', U+0085 (NEL), U+00A0 (NBSP).
 func String(s string) string {
-	b := strings.Builder{}
-	b.Grow(len(s))
+	buf := strings.Builder{}
+	buf.Grow(len(s))
 	lastWasWhitespace := false
 	for len(s) > 0 {
-		r, rLen := utf8.DecodeRuneInString(s)
-
-		switch r {
-		case ' ', '\t', '\n', '\v', '\f', '\r', '\u0085', '\u00A0':
-			if !lastWasWhitespace {
-				b.WriteRune(' ')
-				lastWasWhitespace = true
+		var size int
+		b := s[0]
+		if b < utf8.RuneSelf {
+			size = 1
+			switch b {
+			case ' ', '\t', '\n', '\v', '\f', '\r', '\u0085', '\u00A0':
+				if !lastWasWhitespace {
+					buf.WriteByte(' ')
+					lastWasWhitespace = true
+				}
+			default:
+				buf.WriteByte(b)
+				lastWasWhitespace = false
 			}
-		default:
-			b.WriteString(s[:rLen])
-			lastWasWhitespace = false
+		} else {
+			var r rune
+			r, size = utf8.DecodeRuneInString(s)
+			switch r {
+			case ' ', '\t', '\n', '\v', '\f', '\r', '\u0085', '\u00A0':
+				if !lastWasWhitespace {
+					buf.WriteByte(' ')
+					lastWasWhitespace = true
+				}
+			default:
+				buf.WriteString(s[:size])
+				lastWasWhitespace = false
+			}
 		}
 
-		s = s[rLen:]
+		s = s[size:]
 	}
-	return b.String()
+	return buf.String()
 }
