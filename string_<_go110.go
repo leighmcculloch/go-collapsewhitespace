@@ -4,6 +4,7 @@ package collapsewhitespace
 
 import (
 	"bytes"
+	"unicode/utf8"
 )
 
 // String collapses any whitespace that is not a single standalone space, into
@@ -16,19 +17,21 @@ func String(s string) string {
 	b := bytes.Buffer{}
 	b.Grow(len(s))
 	lastWasWhitespace := false
-	for _, r := range s {
+	for len(s) > 0 {
+		r, rLen := utf8.DecodeRuneInString(s)
+
 		switch r {
 		case ' ', '\t', '\n', '\v', '\f', '\r', '\u0085', '\u00A0':
-			if lastWasWhitespace {
-				continue
-			} else {
-				r = ' '
+			if !lastWasWhitespace {
+				b.WriteRune(' ')
 				lastWasWhitespace = true
 			}
 		default:
+			b.WriteString(s[:rLen])
 			lastWasWhitespace = false
 		}
-		b.WriteRune(r)
+
+		s = s[rLen:]
 	}
 	return b.String()
 }
